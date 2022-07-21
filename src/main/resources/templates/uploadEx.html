@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <input name="uploadFiles" type="file" multiple>
+    <button class="uploadBtn">Upload</button>
+
+    <!-- 업로드된 이미지를 보여줄 수 있는 태그 -->
+    <div class="uploadResult">
+
+    </div> 
+
+    <script
+    src="https://code.jquery.com/jquery-3.6.0.js"
+    integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk="
+    crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.js" integrity="sha512-WNLxfP/8cVYL9sj8Jnp6et0BkubLP31jhTG9vhL/F5uEZmg5wEzKoXp1kJslzPQWwPT1eyMiSxlKCgzHLOTOTQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+            function showUploadedImages(arr){
+        console.log(arr);
+        var divArea = $(".uploadResult");
+        var str = "";
+
+        for(var i = 0; i < arr.length; i++){
+            str += "<div>";
+            str += "<img src='/mreview/display?fileName="+arr[i].thumbnailURL+"'>";
+            str += "<button class='removeBtn' data-name='" + arr[i].imageURL+"'>REMOVE</button>"
+            str += "</div>";
+
+        }
+        divArea.append(str);
+        }
+
+        $('.uploadBtn').click(function( ){
+            var formDate = new FormData();
+            var inputFile = $("input[type='file']");
+            var files = inputFile[0].files;
+            
+            for (var i = 0; i < files.length; i++) {
+                console.log(files[i]);
+                formDate.append("uploadFiles",files[i]);
+                
+            }
+
+            //실제 업로드 부분
+            //upload ajax
+            $.ajax({
+                url: '/mreview/uploadAjax',
+                processData: false,
+                contentType: false, //파일업로드를위해반드시이걸false로지정
+                data: formDate,
+                type: 'POST',
+                dataType: 'json',
+                success: function(result){
+                    //나중에 화면 처리
+                    showUploadedImages(result);
+                },
+                error: function(jqXHR, textStatus, errorThrown){
+                    console.log(textStatus);
+                }
+            });//$.ajax
+
+
+            $(".uploadResult").on("click",".removeBtn", function(e){
+                var target = $(this);
+                var fileName = target.data("name");
+                var targetDiv = $(this).closest("div");
+    
+                console.log(fileName);
+    
+                $.post('/mreview/removeFile',{fileName: fileName}, function(result){
+                    console.log(result);
+                    if(result === true){
+                        targetDiv.remove();
+                    }
+                })
+            })
+
+        }
+        
+        
+        );
+    </script>
+</body>
+</html>
